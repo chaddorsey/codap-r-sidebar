@@ -20,3 +20,4 @@ https://codap3.concord.org with the plugin loaded and the observer logging.
 | 8 | Are selection changes part of the v3 undo stack? | Unit 8: hover highlights must not pollute learner undo history | — |
 | 9 | Mid-session dataset import: does it arrive as `dataContextCountChanged` + `createCases`, or other? | Unit 3 import rule trigger | — |
 | 10 | `get component[id]` reliably returns `position`/`dimensions`? | Only needed if overlay effects extend beyond the iframe (post-v1) | — |
+| 11 | Item ids vs case ids: are `itemSearch` item ids the same ids that `deleteCases` reports in hierarchical contexts? | The snapshot's `case_id` column must match the ids used in `filter(!case_id %in% ...)` blocks | — |

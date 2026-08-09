@@ -65,8 +65,8 @@ describe("takeDocumentSnapshot", () => {
       "log(mass)"
     );
     expect(mammals.items).toEqual([
-      { diet: "meat", species: "lion", mass: 190, logMass: 5.25 },
-      { diet: "plants", species: "zebra", mass: 380, logMass: 5.94 }
+      { case_id: 10, diet: "meat", species: "lion", mass: 190, logMass: 5.25 },
+      { case_id: 11, diet: "plants", species: "zebra", mass: 380, logMass: 5.94 }
     ]);
 
     expect(snapshot.components).toEqual([

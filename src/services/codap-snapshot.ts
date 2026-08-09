@@ -48,9 +48,13 @@ export async function takeDocumentSnapshot(api: CodapApi): Promise<DocumentSnaps
     const itemsRes = await api
       .sendRequest({ action: "get", resource: `dataContext[${name}].itemSearch[*]` })
       .catch(() => undefined);
-    const items: Record<string, unknown>[] = (itemsRes?.values ?? []).map(
-      (item: any) => item?.values ?? item
-    );
+    // case_id makes case-level moves (delete/filter) replayable against the
+    // snapshot vintage. Item-id vs case-id parity in hierarchical contexts is
+    // spike question #11.
+    const items: Record<string, unknown>[] = (itemsRes?.values ?? []).map((item: any) => {
+      const values = item?.values ?? item;
+      return item?.id != null ? { case_id: item.id, ...values } : values;
+    });
     contexts.push({ structure, items });
   }
 
