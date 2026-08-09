@@ -8,6 +8,7 @@ import { DocumentSnapshot, takeDocumentSnapshot } from "../services/codap-snapsh
 import { itemsToCsv } from "../services/dataset-bridge";
 import { TranslationEngine } from "../translation/engine";
 import { generatePreamble, libraryBlock } from "../translation/preamble";
+import { composeScript, executableBlocks } from "../translation/compose";
 import { ExportDataset, buildExportBundle, ExportBundle } from "../lib/export-r";
 
 // Wires the pipeline (plan High-Level Design): Observer -> Engine -> Store,
@@ -24,8 +25,13 @@ export interface OrchestratorOptions {
   api: CodapApi;
   announcer: Announcer;
   persist?: (state: SavedState) => void;
-  // Unit 5 validator hook; absent until webR wiring lands (statuses stay pending).
+  // Unit 5 validator hooks (absent in browsers without Worker support).
   validate?: (block: RBlock) => void;
+  // Schema-change re-queue (ratified validation contract): called with the
+  // current executable script when a rename/delete may invalidate prior blocks.
+  revalidate?: (blocks: RBlock[]) => void;
+  // New dataset observed mid-session: provision its CSV to the R instances.
+  provisionData?: (fileName: string, csv: string) => void;
 }
 
 export class Orchestrator {
@@ -91,6 +97,43 @@ export class Orchestrator {
     this.store.append(block);
     this.options.announcer.announce(block.annotation);
     if (block.kind === "code") this.options.validate?.(block);
+
+    // Mid-session import: give the R instances the new dataset's CSV at the
+    // path the import block reads.
+    if (event.type === "datasetCreated" && block.kind === "code") {
+      void this.provisionNewContext(event.context.name);
+    }
+
+    // Schema-changing moves can invalidate earlier blocks retroactively.
+    const schemaChanging =
+      (event.type === "attributeUpdated" && event.previousName != null) ||
+      event.type === "attributeDeleted" ||
+      event.type === "datasetDeleted";
+    if (schemaChanging) {
+      this.options.revalidate?.(executableBlocks([...this.store.blocks]));
+    }
+  }
+
+  private async provisionNewContext(contextName: string) {
+    if (!this.options.provisionData) return;
+    const res = await this.options.api
+      .sendRequest({ action: "get", resource: `dataContext[${contextName}].itemSearch[*]` })
+      .catch(() => undefined);
+    const items: Record<string, unknown>[] = ((res as any)?.values ?? []).map((item: any) => {
+      const values = item?.values ?? item;
+      return item?.id != null ? { case_id: item.id, ...values } : values;
+    });
+    const varName = this.engine.getContext(contextName)?.varName ?? contextName;
+    this.options.provisionData(`${varName}.csv`, itemsToCsv(items));
+    // The new dataset joins the export vintage (structure detail lives in the
+    // engine; the snapshot entry only feeds CSV export).
+    this.snapshot?.contexts.push({ structure: { name: contextName, collections: [] }, items });
+  }
+
+  // The current executable script — console setup auto-run and Stop-R
+  // recovery both replay this (plan data provisioning contract).
+  currentScript(): string {
+    return composeScript(executableBlocks([...this.store.blocks]));
   }
 
   private primeEngineFromSnapshot() {

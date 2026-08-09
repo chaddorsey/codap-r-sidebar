@@ -15,6 +15,12 @@ export interface ShelterLike {
   purge(): Promise<void>;
 }
 
+// One message from webR's output stream (REPL prompts, output, plots).
+export interface WebROutputMessage {
+  type: string; // "stdout" | "stderr" | "prompt" | "canvas" | "closed" | ...
+  data?: unknown;
+}
+
 // The slice of the webR API this app depends on — mocks implement this.
 export interface WebRInstanceLike {
   init(): Promise<unknown>;
@@ -22,6 +28,9 @@ export interface WebRInstanceLike {
   installPackages(packages: string[], options?: Record<string, unknown>): Promise<unknown>;
   evalR(code: string, options?: Record<string, unknown>): Promise<unknown>;
   evalRVoid?(code: string, options?: Record<string, unknown>): Promise<unknown>;
+  // Raw REPL stream (console UI): read output messages, write input lines.
+  read?(): Promise<WebROutputMessage>;
+  writeConsole?(input: string): void;
   FS: { writeFile(path: string, data: Uint8Array): Promise<unknown> };
   Shelter: new () => Promise<ShelterLike>;
 }
@@ -44,12 +53,28 @@ function defaultFactory(): WebRInstanceLike {
 
 export type InstanceKind = "console" | "validator";
 
+// Coarse boot stages for the learner-facing boot experience (plan Unit 7).
+export type BootStage = "starting" | "packages" | "data" | "ready";
+export type BootStageListener = (kind: InstanceKind, stage: BootStage) => void;
+
 export class WebRService {
   private instances = new Map<InstanceKind, Promise<WebRInstanceLike>>();
   private dataFiles = new Map<string, string>();
   private encoder = new TextEncoder();
+  private bootListeners: BootStageListener[] = [];
 
   constructor(private makeInstance: WebRFactory = defaultFactory) {}
+
+  onBootStage(listener: BootStageListener): () => void {
+    this.bootListeners.push(listener);
+    return () => {
+      this.bootListeners = this.bootListeners.filter(l => l !== listener);
+    };
+  }
+
+  private emitBootStage(kind: InstanceKind, stage: BootStage) {
+    for (const listener of this.bootListeners) listener(kind, stage);
+  }
 
   getConsole(): Promise<WebRInstanceLike> {
     return this.getInstance("console");
@@ -64,19 +89,23 @@ export class WebRService {
   private getInstance(kind: InstanceKind): Promise<WebRInstanceLike> {
     let pending = this.instances.get(kind);
     if (!pending) {
-      pending = this.boot();
+      pending = this.boot(kind);
       this.instances.set(kind, pending);
     }
     return pending;
   }
 
-  private async boot(): Promise<WebRInstanceLike> {
+  private async boot(kind: InstanceKind): Promise<WebRInstanceLike> {
+    this.emitBootStage(kind, "starting");
     const instance = this.makeInstance();
     await instance.init();
+    this.emitBootStage(kind, "packages");
     await instance.installPackages(kRPackages, { quiet: true });
+    this.emitBootStage(kind, "data");
     for (const [fileName, csv] of this.dataFiles) {
       await this.writeDataFile(instance, fileName, csv);
     }
+    this.emitBootStage(kind, "ready");
     return instance;
   }
 
