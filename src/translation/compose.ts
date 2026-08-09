@@ -19,8 +19,11 @@ export function composeScript(blocks: RBlock[], options?: ComposeOptions): strin
     const neutralized =
       options?.forExport && (block.status === "undone" || block.status === "failed");
     if (neutralized) {
-      const label = block.status === "undone" ? "undone in CODAP" : "did not run cleanly";
-      lines.push(`# (This step was ${label}, so it is commented out.)`);
+      lines.push(
+        block.status === "undone"
+          ? "# (This step was undone in CODAP, so it is commented out.)"
+          : "# (This step didn't run cleanly, so it is commented out.)"
+      );
       lines.push(...block.code.split("\n").map(line => `# ${line}`));
     } else {
       lines.push(block.code);

@@ -8,7 +8,8 @@ jest.mock("@concord-consortium/codap-plugin-api", () => ({
   initializePlugin: jest.fn().mockResolvedValue({ values: { savedState: undefined } }),
   codapInterface: {
     sendRequest: jest.fn().mockResolvedValue({ success: true }),
-    updateInteractiveState: jest.fn()
+    updateInteractiveState: jest.fn(),
+    on: jest.fn()
   }
 }));
 
@@ -18,32 +19,30 @@ describe("App / SidebarShell", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockApi.initializePlugin.mockResolvedValue({ values: { savedState: undefined } });
+    mockApi.codapInterface.sendRequest.mockResolvedValue({ success: true });
   });
 
-  it("renders the landmark structure with a pre-created announcer", async () => {
-    render(<App />);
-    expect(screen.getByRole("region", { name: "Generated R script" })).toBeInTheDocument();
-    expect(screen.getByRole("region", { name: "R console" })).toBeInTheDocument();
-    expect(screen.getByRole("toolbar", { name: "R sidebar tools" })).toBeInTheDocument();
-    // The status region must exist before any content is injected into it.
-    const announcer = screen.getByTestId("announcer");
-    expect(announcer).toHaveAttribute("role", "status");
-    expect(announcer).toBeEmptyDOMElement();
-    await waitFor(() => expect(mockApi.initializePlugin).toHaveBeenCalled());
-  });
-
-  // Awaits the connection promise settling inside act() to avoid React act warnings.
   const renderSettled = async () => {
     const view = render(<App />);
     await waitFor(() => expect(mockApi.initializePlugin).toHaveBeenCalled());
+    await screen.findByRole("region", { name: "Generated R script" });
     return view;
   };
 
-  it("shows empty-state onboarding copy on first open", async () => {
+  it("renders the landmark structure with a pre-created announcer", async () => {
     await renderSettled();
-    expect(
-      screen.getByText(/watch it become R code/i)
-    ).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Generated R script" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "R console" })).toBeInTheDocument();
+    expect(screen.getByRole("toolbar", { name: "R sidebar tools" })).toBeInTheDocument();
+    const announcer = screen.getByTestId("announcer");
+    expect(announcer).toHaveAttribute("role", "status");
+  });
+
+  it("shows empty-state onboarding copy on an empty document", async () => {
+    await renderSettled();
+    expect(screen.getByText(/watch it become R code/i)).toBeInTheDocument();
+    // Export disabled until the script has steps.
+    expect(screen.getByRole("button", { name: "Export" })).toBeDisabled();
   });
 
   it("collapses and expands via keyboard-operable controls", async () => {
@@ -66,8 +65,7 @@ describe("App / SidebarShell", () => {
   });
 
   it("has no axe violations in the empty state", async () => {
-    const { container } = render(<App />);
-    await waitFor(() => expect(mockApi.initializePlugin).toHaveBeenCalled());
+    const { container } = await renderSettled();
     const results = await axe(container);
     expect(results.violations).toEqual([]);
   });

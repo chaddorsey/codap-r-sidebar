@@ -9,7 +9,8 @@ export type RBlockStatus =
   | "validated" // executed cleanly against the session environment
   | "failed" // execution failed; visibly quarantined, commented out on export
   | "untranslated" // R can't express this move; comment block, never validated
-  | "undone"; // narrated undo; struck in the pane, commented out on export
+  | "undone" // narrated undo; struck in the pane, commented out on export
+  | "note"; // pure narration (e.g., undo notes); comment kind, never validated
 
 export interface RBlockProvenance {
   eventType: MoveEventType;
@@ -34,4 +35,6 @@ export interface RBlock {
   status: RBlockStatus;
   // Setup-preamble blocks render inside the collapsed "Setup" section.
   isSetup?: boolean;
+  // Captured R error text when status is "failed" (shown via disclosure).
+  validationErrors?: string[];
 }

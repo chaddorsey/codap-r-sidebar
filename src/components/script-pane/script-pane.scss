@@ -1,0 +1,165 @@
+// Layout constants shared with the future overlay layer (Pretext construction
+// contract): named fonts only, line metrics in one place.
+$code-font: "Menlo", "Consolas", "Liberation Mono", monospace;
+$code-font-size: 12px;
+$code-line-height: 1.5;
+
+.script-pane {
+  position: relative;
+  height: 100%;
+  overflow-y: auto;
+  padding: 8px;
+
+  &--empty {
+    color: #444;
+
+    p {
+      margin: 0 0 8px;
+    }
+  }
+
+  &__example code {
+    font-family: $code-font;
+    font-size: $code-font-size;
+    background: #f4f4f4;
+    padding: 2px 4px;
+  }
+
+  &__setup {
+    margin-bottom: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 4px 8px;
+
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+      // 2.5.8: comfortable target.
+      min-height: 24px;
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  &__blocks {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  &__jump {
+    position: sticky;
+    bottom: 8px;
+    left: 100%;
+    padding: 4px 10px;
+    border-radius: 12px;
+    border: 1px solid #1a66c9;
+    background: #eaf2fd;
+  }
+}
+
+.r-block {
+  margin: 0 0 12px;
+  border-left: 3px solid #d5d5d5;
+  padding-left: 8px;
+
+  &:focus-visible {
+    outline: 2px solid #1a66c9;
+    outline-offset: 2px;
+  }
+
+  &__annotation {
+    margin: 0 0 4px;
+    color: #333;
+  }
+
+  &__code {
+    margin: 0;
+    // 1.4.10 reflow: code scrolls in its own box; the pane never scrolls
+    // horizontally.
+    overflow-x: auto;
+    background: #f8f8f8;
+    padding: 6px 8px;
+    font-family: $code-font;
+    font-size: $code-font-size;
+    line-height: $code-line-height;
+
+    code {
+      display: block;
+    }
+  }
+
+  // Per-line DOM elements (Pretext contract: tokens address as (line, range)).
+  &__line {
+    display: block;
+    min-height: $code-line-height * $code-font-size;
+    white-space: pre;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 2px;
+    font-size: 12px;
+  }
+
+  &__status {
+    color: #555;
+  }
+
+  &__send {
+    min-height: 24px;
+  }
+
+  &__errors pre {
+    font-family: $code-font;
+    font-size: 11px;
+    white-space: pre-wrap;
+    background: #fdf2f2;
+    padding: 4px;
+  }
+
+  // Status treatments pair with the icon+text labels (never color alone).
+  &--validated {
+    border-left-color: #2e7d32;
+  }
+
+  &--failed {
+    border-left-color: #b3261e;
+    background: #fff7f7;
+  }
+
+  &--untranslated,
+  &--note {
+    border-left-color: #9a7b00;
+
+    .r-block__code {
+      background: #fffbe8;
+    }
+  }
+
+  &--undone {
+    opacity: 0.6;
+
+    .r-block__code {
+      text-decoration: line-through;
+    }
+  }
+}
+
+// Token colors: all >= 4.5:1 on their backgrounds (#f8f8f8 / #fffbe8).
+.tok--comment { color: #5a6b52; font-style: italic; }
+.tok--string { color: #8f3f00; }
+.tok--number { color: #005a8f; }
+.tok--keyword { color: #6a1b9a; font-weight: 600; }
+.tok--function { color: #1a4f8f; }
+.tok--operator { color: #444; }
+.tok--identifier { color: #222; }
+.tok--plain { color: #222; }
+
+@media (prefers-reduced-motion: reduce) {
+  .script-pane {
+    scroll-behavior: auto;
+  }
+}

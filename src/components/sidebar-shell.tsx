@@ -1,27 +1,40 @@
-import React, { useState } from "react";
+import React, { ReactNode } from "react";
 import { ConnectionStatus } from "../lib/codap-connection";
 import "./sidebar-shell.scss";
 
 interface SidebarShellProps {
   connectionStatus: ConnectionStatus;
-  // Blocks appended while collapsed (wired up by the script pane in Unit 6).
-  unreadCount?: number;
+  expanded: boolean;
+  onToggleExpanded: (expanded: boolean) => void;
+  // Blocks appended while collapsed — badge on the collapsed strip.
+  unreadCount: number;
+  exportEnabled: boolean;
+  onExport: () => void;
+  scriptSlot: ReactNode;
+  consoleSlot?: ReactNode;
 }
 
-// The shell owns the sidebar's information architecture (plan Unit 1):
-// script pane dominant, console minimized until it exists (Unit 7), toolbar
-// enumerated, and a pre-created status announcer — live regions must be in the
-// DOM before any content is injected into them.
-export const SidebarShell = ({ connectionStatus, unreadCount = 0 }: SidebarShellProps) => {
-  const [expanded, setExpanded] = useState(true);
-
+// The shell owns the sidebar's information architecture (plan Unit 1/6):
+// script pane dominant, console minimized until Unit 7 fills it, toolbar
+// enumerated, and a pre-created status announcer — live regions must be in
+// the DOM before any content is injected into them.
+export const SidebarShell = ({
+  connectionStatus,
+  expanded,
+  onToggleExpanded,
+  unreadCount,
+  exportEnabled,
+  onExport,
+  scriptSlot,
+  consoleSlot
+}: SidebarShellProps) => {
   if (!expanded) {
     return (
       <div className="r-sidebar r-sidebar--collapsed">
         <button
           className="r-sidebar__expand"
           aria-expanded={false}
-          onClick={() => setExpanded(true)}
+          onClick={() => onToggleExpanded(true)}
         >
           Expand R sidebar
           {unreadCount > 0 && (
@@ -40,10 +53,14 @@ export const SidebarShell = ({ connectionStatus, unreadCount = 0 }: SidebarShell
     <div className="r-sidebar">
       <div className="r-sidebar__toolbar" role="toolbar" aria-label="R sidebar tools">
         <h1 className="r-sidebar__title">R Sidebar</h1>
-        <button disabled title="Available once your script has steps">
+        <button
+          disabled={!exportEnabled}
+          title={exportEnabled ? "Download your script (and data) as R files" : "Available once your script has steps"}
+          onClick={onExport}
+        >
           Export
         </button>
-        <button aria-expanded={true} onClick={() => setExpanded(false)}>
+        <button aria-expanded={true} onClick={() => onToggleExpanded(false)}>
           Collapse
         </button>
       </div>
@@ -56,23 +73,13 @@ export const SidebarShell = ({ connectionStatus, unreadCount = 0 }: SidebarShell
       )}
 
       <section className="r-sidebar__script" aria-label="Generated R script">
-        {/* Empty-state onboarding (plan Unit 6 owns the full spec; the copy
-            lives here so first-open is never blank). */}
-        <div className="r-sidebar__empty-state">
-          <p>
-            Make a change in CODAP — drag an attribute, make a graph — and
-            watch it become R code here.
-          </p>
-          <p className="r-sidebar__empty-example">
-            <code>mammals &lt;- mammals |&gt; filter(diet == &quot;meat&quot;)</code>
-          </p>
-        </div>
+        {scriptSlot}
       </section>
 
       <section className="r-sidebar__console" aria-label="R console">
-        <p className="r-sidebar__console-placeholder">
-          The R console will appear here.
-        </p>
+        {consoleSlot ?? (
+          <p className="r-sidebar__console-placeholder">The R console will appear here.</p>
+        )}
       </section>
 
       <Announcer />
@@ -80,8 +87,8 @@ export const SidebarShell = ({ connectionStatus, unreadCount = 0 }: SidebarShell
   );
 };
 
-// role="status" is implicitly aria-live="polite"; Unit 6's announcer module
-// writes debounced, human-language summaries (never code) into this node.
+// role="status" is implicitly aria-live="polite"; the Announcer class writes
+// debounced, human-language summaries (never code) into this node.
 const Announcer = () => (
   <div className="visually-hidden" role="status" data-testid="announcer" />
 );

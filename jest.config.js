@@ -36,7 +36,7 @@ module.exports = {
       displayName: "engine",
       testEnvironment: "node",
       testMatch: [
-        "<rootDir>/src/@(translation|services|models|lib)/**/*.@(test|spec).ts",
+        "<rootDir>/src/@(translation|services|models|lib|app)/**/*.@(test|spec).ts",
       ],
     },
     {

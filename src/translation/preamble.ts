@@ -24,21 +24,32 @@ export type GraphBlockBuilder = (
   engine: TranslationEngine
 ) => RBlock | null;
 
+// Both libraries load unconditionally: the session may create its first graph
+// live, after the preamble has already run. Also appended lazily by the
+// orchestrator when a session starts from an empty document.
+export function libraryBlock(engine: TranslationEngine): RBlock {
+  return setup(engine, {
+    eventType: "datasetCreated",
+    code: "library(dplyr)\nlibrary(ggplot2)",
+    annotation:
+      "Setup: load the tidyverse packages this script uses. This section recreates what was already in your CODAP document."
+  });
+}
+
 export function generatePreamble(
   snapshot: DocumentSnapshot,
   engine: TranslationEngine,
   options?: { graphBlockBuilder?: GraphBlockBuilder }
 ): RBlock[] {
-  const blocks: RBlock[] = [];
+  // An empty document gets no preamble at all: the empty-state onboarding is
+  // the first thing the learner sees, and the library block arrives with
+  // their first real move.
+  if (snapshot.contexts.length === 0 && snapshot.components.every(c => !c.graphConfig)) {
+    return [];
+  }
 
-  // Both libraries load unconditionally: the session may create its first
-  // graph live, after the preamble has already run.
-  blocks.push(setup(engine, {
-    eventType: "datasetCreated",
-    code: "library(dplyr)\nlibrary(ggplot2)",
-    annotation:
-      "Setup: load the tidyverse packages this script uses. This section recreates what was already in your CODAP document."
-  }));
+  const blocks: RBlock[] = [];
+  blocks.push(libraryBlock(engine));
 
   for (const context of snapshot.contexts) {
     const state = engine.registerContext(context.structure);
