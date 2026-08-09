@@ -101,11 +101,21 @@ export default defineConfig<PlaywrightCoverageOptions>({
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      use: {
+        ...devices["Desktop Chrome"],
+        /* Chrome's Local Network Access enforcement blocks the public CODAP
+           host from embedding https://localhost:8080 — dev/E2E only; deployed
+           plugins are public URLs and never trigger it. */
+        launchOptions: { args: ["--disable-features=LocalNetworkAccessChecks"] },
+      },
     },
     {
       name: "chromium with channel",
-      use: { ...devices["Desktop Chrome"], channel: "chromium" },
+      use: {
+        ...devices["Desktop Chrome"],
+        channel: "chromium",
+        launchOptions: { args: ["--disable-features=LocalNetworkAccessChecks"] },
+      },
     },
 
     // {

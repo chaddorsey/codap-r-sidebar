@@ -191,6 +191,20 @@ export default typescriptEslint.config(
     },
   },
   {
+    name: "node scripts",
+    files: ["scripts/**/*.js"],
+    languageOptions: {
+      globals: {
+        ...globals.node
+      },
+    },
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+      "no-console": "off",
+      "max-len": "off",
+    }
+  },
+  {
     name: "jest config",
     files: ["jest.config.js"],
     languageOptions: {

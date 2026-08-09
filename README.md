@@ -55,6 +55,14 @@ There are two ways to test the plugin in CODAP:
 1. Start the plugin with `npm run start:secure`. You need to first set up a local http certificate if you haven't done so: https://github.com/concord-consortium/codap/blob/main/v3/README.md#run-using-https
 2. Run CODAP v3 with the `di` parameter: https://codap3.concord.org/?di=https://localhost:8080/
 
+**Chrome Local Network Access:** recent Chrome blocks public sites (codap3.concord.org)
+from embedding `localhost` — the plugin tile appears blank with no console error
+(`ERR_BLOCKED_BY_LOCAL_NETWORK_ACCESS_CHECKS` in the Network tab). Fix once per profile:
+address-bar icon → Site settings → **Local network access** → Allow, then reload.
+(Deployed plugins are public URLs and never trigger this.) Two more localhost gotchas:
+the URL must be `https://` explicitly, and an expired `~/.localhost-ssl` cert makes the
+iframe fail silently — check `openssl x509 -in ~/.localhost-ssl/localhost.pem -noout -dates`.
+
 #### HTTP
 1. Start the plugin webserver `npm start` (port 8080 by default)
 2. Check out the CODAP v3 source, install the dependencies, and start the dev server: https://github.com/concord-consortium/codap/blob/main/v3/README.md#initial-steps
