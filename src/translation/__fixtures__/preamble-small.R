@@ -1,5 +1,6 @@
 # Setup: load the tidyverse packages this script uses. This section recreates what was already in your CODAP document.
 library(dplyr)
+library(ggplot2)
 
 # Setup: the dataset "Mammals" (2 cases) written out as a tribble — a small table typed directly in R. case_id identifies each CODAP case.
 mammals <- tribble(

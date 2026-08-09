@@ -14,6 +14,24 @@ export interface ContextState {
   awaitingImportCases: boolean;
 }
 
+// Accumulated per-graph translation state under the delta-block model: each
+// graph is a named plot object; axis/legend/split state mirrors the last
+// request-verified GraphConfig.
+export interface GraphState {
+  componentId: number;
+  varName: string;
+  contextName?: string;
+  x?: string;
+  y?: string;
+  legend?: string;
+  topSplit?: string;
+  rightSplit?: string;
+  // The current geom call (e.g., "geom_point()"), or undefined while the
+  // graph is an empty panel.
+  geom?: string;
+  initialized: boolean;
+}
+
 // The surface rule modules may use — implemented by TranslationEngine.
 export interface EngineApi {
   nextBlockId(): string;
@@ -23,4 +41,7 @@ export interface EngineApi {
   forgetContext(contextName: string): void;
   currentGroupAttrs(state: ContextState): string[];
   sliderVarName(globalName: string): string;
+  registerGraph(componentId: number, contextName?: string): GraphState;
+  getGraph(componentId: number): GraphState | undefined;
+  forgetGraph(componentId: number): void;
 }

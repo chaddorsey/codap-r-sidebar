@@ -1,7 +1,8 @@
 import { DataContextStructure, MoveEvent } from "../models/move-events";
 import { RBlock } from "../models/r-blocks";
-import { ContextState, EngineApi } from "./engine-types";
+import { ContextState, EngineApi, GraphState } from "./engine-types";
 import { translateDataMove } from "./rules/data-moves";
+import { translateGraphMove } from "./rules/graph-moves";
 import { sanitizeVariableName } from "./r-syntax";
 
 // Pure translation engine (plan Unit 3): MoveEvent -> RBlock under the
@@ -15,6 +16,8 @@ export class TranslationEngine implements EngineApi {
   private contexts = new Map<string, ContextState>();
   private usedVarNames = new Set<string>();
   private sliderVars = new Map<string, string>();
+  private graphs = new Map<number, GraphState>();
+  private graphCounter = 0;
 
   nextBlockId(): string {
     this.blockCounter += 1;
@@ -77,11 +80,33 @@ export class TranslationEngine implements EngineApi {
     return varName;
   }
 
+  registerGraph(componentId: number, contextName?: string): GraphState {
+    const existing = this.graphs.get(componentId);
+    if (existing) return existing;
+    this.graphCounter += 1;
+    const state: GraphState = {
+      componentId,
+      varName: `p${this.graphCounter}`,
+      contextName,
+      initialized: false
+    };
+    this.graphs.set(componentId, state);
+    return state;
+  }
+
+  getGraph(componentId: number): GraphState | undefined {
+    return this.graphs.get(componentId);
+  }
+
+  forgetGraph(componentId: number) {
+    this.graphs.delete(componentId);
+  }
+
   // Translate one observed move. Returns null for record-only events and for
   // events that produce no block (e.g., datasetCreated for a context the
   // preamble already covers). Never throws: untranslatable moves become
   // comment blocks (ratified fallback).
   translate(event: MoveEvent): RBlock | null {
-    return translateDataMove(this, event);
+    return translateGraphMove(this, event) ?? translateDataMove(this, event);
   }
 }

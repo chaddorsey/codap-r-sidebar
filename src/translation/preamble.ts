@@ -3,6 +3,7 @@ import { RBlock } from "../models/r-blocks";
 import { ContextSnapshot, DocumentSnapshot } from "../services/codap-snapshot";
 import { TranslationEngine } from "./engine";
 import { ContextState } from "./engine-types";
+import { buildGraphSetupBlock } from "./rules/graph-moves";
 import { translateFormula, UntranslatableFormulaError } from "./formula-translator";
 import { attrRef, rebindStep, rString, rValue } from "./r-syntax";
 
@@ -29,13 +30,12 @@ export function generatePreamble(
   options?: { graphBlockBuilder?: GraphBlockBuilder }
 ): RBlock[] {
   const blocks: RBlock[] = [];
-  const hasGraphs = snapshot.components.some(c => c.graphConfig != null);
 
-  const libraryLines = ["library(dplyr)"];
-  if (hasGraphs) libraryLines.push("library(ggplot2)");
+  // Both libraries load unconditionally: the session may create its first
+  // graph live, after the preamble has already run.
   blocks.push(setup(engine, {
     eventType: "datasetCreated",
-    code: libraryLines.join("\n"),
+    code: "library(dplyr)\nlibrary(ggplot2)",
     annotation:
       "Setup: load the tidyverse packages this script uses. This section recreates what was already in your CODAP document."
   }));
@@ -45,12 +45,11 @@ export function generatePreamble(
     blocks.push(...contextBlocks(context, state, engine));
   }
 
-  if (options?.graphBlockBuilder) {
-    for (const component of snapshot.components) {
-      if (component.graphConfig) {
-        const block = options.graphBlockBuilder(component.graphConfig, component.id, engine);
-        if (block) blocks.push({ ...block, isSetup: true });
-      }
+  const buildGraphBlock = options?.graphBlockBuilder ?? buildGraphSetupBlock;
+  for (const component of snapshot.components) {
+    if (component.graphConfig) {
+      const block = buildGraphBlock(component.graphConfig, component.id, engine);
+      if (block) blocks.push({ ...block, isSetup: true });
     }
   }
 

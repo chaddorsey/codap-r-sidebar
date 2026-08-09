@@ -81,7 +81,7 @@ describe("generatePreamble", () => {
     expect(blocks[1].code).toContain("2, 5");
   });
 
-  it("includes ggplot2 only when the document has graphs, delegating graph blocks to the injected builder", () => {
+  it("delegates existing-graph reconstruction to the injected builder", () => {
     const snapshotWithGraph: DocumentSnapshot = {
       ...smallSnapshot,
       components: [
