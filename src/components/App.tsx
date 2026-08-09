@@ -8,6 +8,7 @@ import {
 import { downloadBundle } from "../lib/export-r";
 import { RBlock } from "../models/r-blocks";
 import { realCodapApi } from "../services/codap-api";
+import { CrossHighlightController } from "../services/cross-highlight";
 import { ValidationOutcome, Validator } from "../services/validator";
 import { WebRService } from "../services/webr-service";
 import { Announcer } from "./script-pane/announcer";
@@ -35,12 +36,14 @@ export const App = () => {
   const [hasBlocks, setHasBlocks] = useState(false);
   const [validatorReady, setValidatorReady] = useState(false);
   const [pendingInsert, setPendingInsert] = useState<string | null>(null);
+  const [highlightedIds, setHighlightedIds] = useState<ReadonlySet<string>>(new Set());
 
   const expandedRef = useRef(true);
   const announcerRef = useRef<Announcer | undefined>(undefined);
   const serviceRef = useRef<WebRService | null | undefined>(undefined);
   const validatorRef = useRef<Validator | null | undefined>(undefined);
   const orchestratorRef = useRef<Orchestrator | undefined>(undefined);
+  const crossHighlightRef = useRef<CrossHighlightController | undefined>(undefined);
 
   if (announcerRef.current === undefined) {
     announcerRef.current = new Announcer(
@@ -107,6 +110,22 @@ export const App = () => {
             void service.provisionData(dataset.fileName, dataset.csv);
           }
         }
+        // Cross-highlight (Unit 8): needs the live observer for recording
+        // hygiene; CODAP-side selections light up matching blocks.
+        const observer = orchestrator.observer;
+        if (observer) {
+          const controller = new CrossHighlightController({
+            api: realCodapApi(),
+            tagger: observer,
+            onHighlightBlocks: blockIds => setHighlightedIds(new Set(blockIds))
+          });
+          crossHighlightRef.current = controller;
+          observer.on(event => {
+            if (event.type === "selectionChanged") {
+              controller.handleSelection(event, orchestrator.store.blocks);
+            }
+          });
+        }
         setHasBlocks(orchestrator.store.blocks.length > 0);
         orchestrator.store.listen({
           onAppend: () => {
@@ -156,6 +175,12 @@ export const App = () => {
           store={orchestrator.store}
           validatorReady={validatorReady}
           onSendToConsole={handleSendToConsole}
+          highlightedIds={highlightedIds}
+          crossHighlight={{
+            enter: block => crossHighlightRef.current?.enter(block),
+            leave: () => void crossHighlightRef.current?.leave(),
+            dismiss: () => crossHighlightRef.current?.dismiss()
+          }}
         />
       }
       consoleSlot={

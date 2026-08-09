@@ -12,8 +12,13 @@ interface BlockViewProps {
   // Roving tabindex: exactly one block is the tab stop.
   isTabStop: boolean;
   validatorReady: boolean;
+  highlighted?: boolean;
   onSendToConsole?: (block: RBlock) => void;
   onFocusMove?: (direction: 1 | -1, blockId: string) => void;
+  // Cross-highlight (plan Unit 8): hover and keyboard focus share one path.
+  onHighlightEnter?: (block: RBlock) => void;
+  onHighlightLeave?: () => void;
+  onHighlightDismiss?: () => void;
 }
 
 interface StatusSpec {
@@ -42,7 +47,10 @@ function statusSpec(block: RBlock, validatorReady: boolean): StatusSpec | null {
   }
 }
 
-export const BlockView = ({ block, isTabStop, validatorReady, onSendToConsole, onFocusMove }: BlockViewProps) => {
+export const BlockView = ({
+  block, isTabStop, validatorReady, highlighted,
+  onSendToConsole, onFocusMove, onHighlightEnter, onHighlightLeave, onHighlightDismiss
+}: BlockViewProps) => {
   const annotationId = `${block.id}-annotation`;
   const status = statusSpec(block, validatorReady);
   const sendable = block.kind === "code" && block.status !== "undone";
@@ -54,16 +62,23 @@ export const BlockView = ({ block, isTabStop, validatorReady, onSendToConsole, o
     } else if (event.key === "ArrowUp") {
       event.preventDefault();
       onFocusMove?.(-1, block.id);
+    } else if (event.key === "Escape") {
+      // 1.4.13: dismiss the highlight without moving the pointer or focus.
+      onHighlightDismiss?.();
     }
   };
 
   return (
     <li
-      className={`r-block r-block--${block.status}`}
+      className={`r-block r-block--${block.status}${highlighted ? " r-block--highlighted" : ""}`}
       data-block-id={block.id}
       tabIndex={isTabStop ? 0 : -1}
       aria-describedby={annotationId}
       onKeyDown={handleKeyDown}
+      onMouseEnter={() => onHighlightEnter?.(block)}
+      onMouseLeave={() => onHighlightLeave?.()}
+      onFocus={() => onHighlightEnter?.(block)}
+      onBlur={() => onHighlightLeave?.()}
     >
       <p id={annotationId} className="r-block__annotation">
         {block.annotation}

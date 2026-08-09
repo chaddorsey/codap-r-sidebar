@@ -8,13 +8,23 @@ import "./script-pane.scss";
 // collapsed Setup section, roving tabindex, log-follow scrolling with a
 // "N new steps" jump affordance, and append-never-steals-focus (2.4.11).
 
+export interface CrossHighlightHandlers {
+  enter(block: RBlock): void;
+  leave(): void;
+  dismiss(): void;
+}
+
 interface ScriptPaneProps {
   store: ScriptStore;
   validatorReady?: boolean;
   onSendToConsole?: (block: RBlock) => void;
+  crossHighlight?: CrossHighlightHandlers;
+  highlightedIds?: ReadonlySet<string>;
 }
 
-export const ScriptPane = ({ store, validatorReady = false, onSendToConsole }: ScriptPaneProps) => {
+export const ScriptPane = ({
+  store, validatorReady = false, onSendToConsole, crossHighlight, highlightedIds
+}: ScriptPaneProps) => {
   const [, setVersion] = useState(0);
   const [unseen, setUnseen] = useState(0);
   const [tabStopId, setTabStopId] = useState<string | null>(null);
@@ -98,8 +108,12 @@ export const ScriptPane = ({ store, validatorReady = false, onSendToConsole }: S
                 block={block}
                 isTabStop={block.id === currentTabStop}
                 validatorReady={validatorReady}
+                highlighted={highlightedIds?.has(block.id)}
                 onSendToConsole={onSendToConsole}
                 onFocusMove={moveFocus}
+                onHighlightEnter={crossHighlight?.enter}
+                onHighlightLeave={crossHighlight?.leave}
+                onHighlightDismiss={crossHighlight?.dismiss}
               />
             ))}
           </ol>
@@ -112,8 +126,12 @@ export const ScriptPane = ({ store, validatorReady = false, onSendToConsole }: S
             block={block}
             isTabStop={block.id === currentTabStop}
             validatorReady={validatorReady}
+            highlighted={highlightedIds?.has(block.id)}
             onSendToConsole={onSendToConsole}
             onFocusMove={moveFocus}
+            onHighlightEnter={crossHighlight?.enter}
+            onHighlightLeave={crossHighlight?.leave}
+            onHighlightDismiss={crossHighlight?.dismiss}
           />
         ))}
       </ol>

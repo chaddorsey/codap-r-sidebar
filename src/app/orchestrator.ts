@@ -37,7 +37,7 @@ export interface OrchestratorOptions {
 export class Orchestrator {
   readonly engine = new TranslationEngine();
   store = new ScriptStore();
-  private observer?: CodapObserver;
+  observer?: CodapObserver;
   private snapshot?: DocumentSnapshot;
   private digest = "";
 

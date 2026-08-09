@@ -139,6 +139,12 @@ $code-line-height: 1.5;
     }
   }
 
+  // CODAP-selection match (Unit 8): static outline, reduced-motion safe.
+  &--highlighted {
+    outline: 2px solid #1a66c9;
+    outline-offset: 1px;
+  }
+
   &--undone {
     opacity: 0.6;
 
