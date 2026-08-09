@@ -32,6 +32,28 @@ jobs:
       - uses: actions/setup-node@v4
       - name: Install Dependencies
         run: npm ci
+      # Self-hosted webR package library image (plan Unit 9): one cacheable
+      # file replacing per-package CDN downloads on school networks. The rwasm
+      # toolchain must match the webr npm version (ABI-locked); cache the
+      # built image keyed on that version + package list.
+      - name: Resolve webR version
+        id: webr-version
+        run: echo "version=$(node -p "require('webr/package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Cache library image
+        id: library-image-cache
+        uses: actions/cache@v4
+        with:
+          path: dist/webr-library
+          key: webr-library-${{ steps.webr-version.outputs.version }}-${{ hashFiles('scripts/build-library-image/build.R') }}
+      - uses: r-lib/actions/setup-r@v2
+        if: steps.library-image-cache.outputs.cache-hit != 'true'
+        with:
+          use-public-rspm: true
+      - name: Build library image
+        if: steps.library-image-cache.outputs.cache-hit != 'true'
+        run: |
+          Rscript -e 'install.packages("rwasm", repos = c("https://r-wasm.r-universe.dev", "https://cloud.r-project.org"))'
+          Rscript scripts/build-library-image/build.R dist/webr-library
       - uses: concord-consortium/s3-deploy-action@v1
         id: s3-deploy
         with:

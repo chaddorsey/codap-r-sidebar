@@ -195,7 +195,7 @@ Phased; units within a phase are sequential unless noted.
 
 **Verification:** CI green on Jest + Playwright + axe empty-state scan; plugin visibly docks as sidebar-shaped tile in CODAP v3.
 
-- [ ] **Unit 2: Observer — MoveEvent vocabulary, subscriptions, enrichment, snapshot**
+- [x] **Unit 2: Observer — MoveEvent vocabulary, subscriptions, enrichment, snapshot**
 
 **Goal:** All R2 move families (plus recorded-only selection) emerge as typed `MoveEvent`s; document snapshot supports the preamble.
 
@@ -228,7 +228,7 @@ Phased; units within a phase are sequential unless noted.
 
 ### Phase 2 — Translation
 
-- [ ] **Unit 3: Translation engine — data + hierarchy moves, formulas, preamble**
+- [x] **Unit 3: Translation engine — data + hierarchy moves, formulas, preamble**
 
 **Goal:** Pure engine turning data/hierarchy MoveEvents and DocumentSnapshots into annotated dplyr blocks.
 
@@ -259,7 +259,7 @@ Phased; units within a phase are sequential unless noted.
 
 **Verification:** Golden corpus reviewed; engine has no imports from UI or services (enforced via lint boundary or ts-project references).
 
-- [ ] **Unit 4: Translation engine — graph moves (ggplot2)**
+- [x] **Unit 4: Translation engine — graph moves (ggplot2)**
 
 **Goal:** Graph MoveEvents → ggplot2 blocks covering creation, axes, legend/color, splits, pointConfig variants, adornments.
 
@@ -286,7 +286,7 @@ Phased; units within a phase are sequential unless noted.
 
 ### Phase 3 — R runtime
 
-- [ ] **Unit 5: webR service + validation pipeline + CI corpus runner**
+- [x] **Unit 5: webR service + validation pipeline + CI corpus runner**
 
 **Goal:** Managed webR instances; every RBlock validated before display claims it runs; golden corpus executes in CI.
 
@@ -317,7 +317,7 @@ Phased; units within a phase are sequential unless noted.
 
 ### Phase 4 — Learner-facing UI
 
-- [ ] **Unit 6: Script pane — annotated blocks, narration, export, persistence**
+- [x] **Unit 6: Script pane — annotated blocks, narration, export, persistence**
 
 **Goal:** The accessible annotated script experience: append, undo narration, send-to-console, `.R` export, savedState persistence.
 
@@ -350,7 +350,7 @@ Phased; units within a phase are sequential unless noted.
 
 **Verification:** Exported `.R` from an E2E-recorded session runs green through the corpus runner; manual NVDA pass of "hear the script grow" journey.
 
-- [ ] **Unit 7: R console — REPL, plots, kill/restart**
+- [x] **Unit 7: R console — REPL, plots, kill/restart**
 
 **Goal:** Learner console: run blocks or free R, see output and ggplot renders, recover from runaway code.
 
@@ -379,7 +379,7 @@ Phased; units within a phase are sequential unless noted.
 
 ### Phase 5 — Linking & hardening
 
-- [ ] **Unit 8: Cross-highlight controller**
+- [x] **Unit 8: Cross-highlight controller**
 
 **Goal:** Hover/focus on script ↔ CODAP highlighting, WCAG 1.4.13-conformant.
 
