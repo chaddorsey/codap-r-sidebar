@@ -27,6 +27,8 @@ module.exports = (env, argv) => {
       static: {
         directory: path.join(__dirname, 'dist'),
       },
+      // ALLOW_TUNNEL=1 lets a public tunnel (cloudflared) reach the dev server.
+      allowedHosts: process.env.ALLOW_TUNNEL ? 'all' : 'auto',
       hot: true,
       headers: {
         'Access-Control-Allow-Origin': '*'
