@@ -54,6 +54,7 @@ export const SidebarShell = ({
       <div className="r-sidebar__toolbar" role="toolbar" aria-label="R sidebar tools">
         <h1 className="r-sidebar__title">R Sidebar</h1>
         <button
+          className="r-sidebar__export"
           disabled={!exportEnabled}
           title={exportEnabled ? "Download your script (and data) as R files" : "Available once your script has steps"}
           onClick={onExport}

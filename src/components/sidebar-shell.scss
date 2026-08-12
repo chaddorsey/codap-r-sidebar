@@ -35,6 +35,29 @@
     font-weight: 700;
   }
 
+  // Deliberately quiet: the R script is the star of this UI, so export reads
+  // as a small utility link, not a call to action (still a 24px+ target).
+  // Selector outranks the general `.r-sidebar button` rule above.
+  &__toolbar &__export {
+    background: none;
+    border: none;
+    padding: 2px 6px;
+    font-size: 12px;
+    color: #666;
+    text-decoration: underline;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      color: #1a66c9;
+    }
+
+    &:disabled {
+      color: #aaa;
+      text-decoration: none;
+      cursor: default;
+    }
+  }
+
   &__banner {
     margin: 0;
     padding: 8px;
