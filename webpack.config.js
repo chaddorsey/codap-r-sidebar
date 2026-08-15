@@ -26,6 +26,10 @@ module.exports = (env, argv) => {
     devServer: {
       static: {
         directory: path.join(__dirname, 'dist'),
+        // serve-index has an unhandled ERR_HTTP_HEADERS_SENT race that crashes
+        // the whole dev server when directory paths are requested (seen with
+        // public-tunnel scanner traffic). We never need directory listings.
+        serveIndex: false,
       },
       // ALLOW_TUNNEL=1 lets a public tunnel (cloudflared) reach the dev server.
       allowedHosts: process.env.ALLOW_TUNNEL ? 'all' : 'auto',
